@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  modbus-server:
+    build:
+      context: ./modbus
+    container_name: energio-modbus-server
+    ports:
+      - "502:502"
+    environment:
+      MODBUS_HOST: "0.0.0.0"
+      MODBUS_PORT: "502"
+      HR_SIZE: "10000"
+      COILS_SIZE: "2000"
+      DI_SIZE: "2000"
+      IR_SIZE: "2000"
+    restart: unless-stopped
+    networks:
+      - energio_net
+
+  api:
+    build:
+      context: ./api
+    container_name: energio-modbus-api
+    ports:
+      - "8000:8000"
+    environment:
+      MODBUS_HOST: "modbus-server"
+      MODBUS_PORT: "502"
+      MODBUS_UNIT: "1"
+      MODBUS_TIMEOUT: "2.0"
+    depends_on:
+      - modbus-server
+    restart: unless-stopped
+    networks:
+      - energio_net
+
+networks:
+  energio_net:
+    driver: bridge
